@@ -29,10 +29,10 @@ itemRoutes.get('/api/items/new', (req, res, next) => {
     });
 });
 
-// create new phone
+// create new item
 itemRoutes.post('/api/items/new', myUploader.single('itemPic'), (req, res, next) => {
   if(!req.user){
-      res.status(401).json({message: "Log in to create phone."});
+      res.status(401).json({message: "Log in to create item."});
       return;
   }
   const newItem = new Item({
@@ -40,7 +40,8 @@ itemRoutes.post('/api/items/new', myUploader.single('itemPic'), (req, res, next)
     name: req.body.itemName,
     description: req.body.itemDescription,
     owner: req.user._id,
-    userName: req.user.username
+    userName: req.user.username,
+    notifications: req.body.itemNotification
     // userName: req.body.userName
   });
   if(req.file){
@@ -66,7 +67,41 @@ itemRoutes.post('/api/items/new', myUploader.single('itemPic'), (req, res, next)
   });
 });
 
-// list the phones
+itemRoutes.post('/api/items/:id/notifications/new', (req, res, next) =>{
+  if (!req.user) {
+    res.status(401).json({ message: "Log in to update the item." });
+    return;
+  }
+  // if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+  //     res.status(400).json({ message: "Specified id is not valid" });
+  //     return;
+  // }
+  Item.findById(req.params.id, (err, item) => {
+    if(err){
+        res.status(500).json({message: "Some weird error from DB."});
+        return;
+    }
+
+    const notificationItem = new Notification({
+      category: req.body.itemCategory,
+      name: req.body.itemName,
+      description: req.body.itemDescription,
+      owner: req.user._id,
+      userName: req.user.username,
+      notifications: req.body.itemNotification
+    });
+    
+    item.notifications.push(newItem); 
+    
+    item.save((err) =>{
+      if (err) {return next(err)}
+
+    res.status(200).json(item);
+    });
+  });
+});
+
+// list the items
 itemRoutes.get('/api/items', (req, res, next) => {
     if (!req.user) {
       res.status(401).json({ message: "Log in to see items." });
@@ -86,7 +121,7 @@ itemRoutes.get('/api/items', (req, res, next) => {
 });
 
 
-// list single phone
+// list single item
 itemRoutes.get("/api/items/:id", (req, res, next) => {
   if (!req.user) {
     res.status(401).json({ message: "Log in to see THE item." });
@@ -108,7 +143,7 @@ itemRoutes.get("/api/items/:id", (req, res, next) => {
   });
 });
 
-// update the phone
+// update the item
 itemRoutes.put('/api/items/:id', (req, res, next) => {
     if (!req.user) {
       res.status(401).json({ message: "Log in to update the item." });
@@ -123,7 +158,8 @@ itemRoutes.put('/api/items/:id', (req, res, next) => {
         category: req.body.itemCategory,
         name: req.body.itemName,
         description: req.body.itemDescription,
-        image: req.body.image    
+        image: req.body.image,
+        notifications: req.body.itemNotification    
     };
 
   Item.findByIdAndUpdate(req.params.id, updates, err => {
@@ -138,7 +174,7 @@ itemRoutes.put('/api/items/:id', (req, res, next) => {
   });
 });
 
-// delete phone
+// delete item
 itemRoutes.delete("/api/items/:id", (req, res, next) => {
   if (!req.user) {
     res.status(401).json({ message: "Log in to delete the item." });

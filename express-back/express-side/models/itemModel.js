@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const Notification = require("./notification.js")
+// import { Notification } from "./notification"
 
 const ItemSchema = new Schema({
     category: { 
@@ -19,10 +21,13 @@ const ItemSchema = new Schema({
         type: Schema.Types.ObjectId,
         required: true,
         ref: 'User'
-    } ,
+    },
     userName: {
         type: String
-    }
+    },
+    notifications:[
+        Notification.schema
+    ]
     },
     {
         timestamps: true
